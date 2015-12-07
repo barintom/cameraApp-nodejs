@@ -8,7 +8,22 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 	<script lang="javascript/text">
 	//var video = null;
-	
+	  $(document).ready(function(){           
+                $("#capture").submit(function(e){
+                    $.ajax({
+                        url: "/store",
+                        type: "POST",
+                        data: $(this).serialize(),
+                        success: function(data){
+                            alert(data);
+                        }
+                    });
+					 e.preventDefault();
+
+                });
+               
+        });
+		
 		window.addEventListener("DOMContentLoaded", function() {
 	
 	var canvas = document.getElementById("canvas"),
@@ -80,7 +95,7 @@
 		<h3>Add new person</h3>
 		<div class="jumbotron">
 
-			<form id="capture" action="store" method="post" class="form-horizontal" role="form">
+			<form id="capture" action="#" method="post" class="form-horizontal" role="form">
 				<div class="form-group">
 					<label class="control-label col-sm-2" for="name">Name:</label>
 					<div class="col-sm-10">
@@ -114,7 +129,7 @@
 					<label class="control-label col-sm-2" for="snap"></label>
 					<div class="col-sm-10">
 						<a class="btn btn-primary btn-lg" href="#" role="button" id="snap">Capture</a>
-						<a class="btn btn-primary btn-lg" href="#" role="button" id="snap">Store</a>
+						<input type="submit" class="btn btn-primary btn-lg" value="Store" id="store" name="store">
 					</div>
 				</div>
 
