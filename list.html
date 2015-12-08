@@ -10,16 +10,50 @@
 	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 	<script lang="javascript/text">
 		var socket = io();
-		  socket.on('newItem', function(data) {
+		  socket.on('change', function(data) {
 			  //Reaload
 			  console.log('Change: ',data);
+			  loadData();
 		  });
 		  socket.emit('newItem')
 
-		window.addEventListener("DOMContentLoaded", function() {
+		function loadData() {
+			  
+			$.ajax({
+				 url: "/contacts",
+                 type: "GET",                      
+                 success: function(data){
+					 $('#tbl > tbody:last').children().remove();
+                  	$.each(data, function(i,item){
+								  
+			    var row = '<tr>'+
+				  				'<td>'+item._id+'</td>'+
+								'<td><img src=\''+item._id+'\'/></td>'+
+								'<td>'+item.name+'</td><td>'+item.age+'</td><td>'+item.gender+'</td>'+
+								'<td><a href="#" onClick="deleteContact(\''+item._id+'\')">(X)</a></td>'+
+							'</tr>';
+														
+                $('#tbl > tbody:last').append(row);
 
-	});
-		</script>
+        			});
+                  },
+				  complete: function() {
+					$("#bar").hide();
+				  }
+            });					 
+		}
+		
+		function deleteContact(id) {
+				$.ajax({
+				 url: "/contact/"+id,
+                 type: "DELETE"
+            });		
+		}
+
+		$(document).ready(function(){
+       		loadData();
+		});
+	</script>
 </head>
 
 <body>
@@ -28,7 +62,7 @@
 		<div class="jumbotron">
 
 			<div class="table-responsive">
-				<table class="table">
+				<table class="table" id="tbl" name="tbl">
 					<thead>
 						<tr>
 							<th>#</th>
@@ -40,14 +74,6 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td>1</td>
-							<td>..Thumb..</td>
-							<td>Some name</td>
-							<td>35</td>
-							<td>male</td>
-							<td>(X)</td>
-						</tr>
 					</tbody>
 				</table>
 			</div>

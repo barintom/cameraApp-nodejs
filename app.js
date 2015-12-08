@@ -32,10 +32,36 @@ app.get('/capture', function (req, res) {
     res.sendFile(path.join(__dirname + '/capture.html'));
 });
 
-/// ------------ Show list of persons ---------------
+/// ---- Delete contact ------
+app.delete('/contact/:id', function (req, res) {
+    var id = req.params.id;
+    Contact.find({ _id: id}).remove(function onRemoved(err, removed) {
+        if (removed) {
+            res.status = 204 //Deleted no content back
+        } else if (err) {
+            res.status = 500 //Probably internal error
+            res.write(JSON.stringify({ status: 'ERROR', message: err }));
+        }
+        console.log('err',err,'removed',removed==null);
+        res.end();
+         io.sockets.emit('change', { message: id + ' was deleted.' });
+    });
+    
+    //res.sendFile(path.join(__dirname + '/capture.html'));
+});
+
+/// ------------ Show list of contacts UI ---------------
 app.get('/list', function (req, res) {
     res.sendFile(path.join(__dirname + '/list.html'));
 });
+
+/// ------------ Show list of contacts Data ---------------
+app.get('/contacts', function (req, res) {
+    Contact.find({},null,null, function results(err, docs) {
+        res.send(docs);
+    })
+});
+
 
 /// ---------- Store contanct to MongoDB--------------
 app.post('/contact', function (req, res) {
@@ -50,7 +76,7 @@ app.post('/contact', function (req, res) {
             console.log(contact);
             res.status = 201 //Created
             res.write(JSON.stringify({ status: 'DONE' }));
-            io.sockets.emit('newItem', { message: contact.name + ' was added to collection.' });
+            io.sockets.emit('change', { message: contact.name + ' was added to collection.' });
         }
         res.end();
     });
