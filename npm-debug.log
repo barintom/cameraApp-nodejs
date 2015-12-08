@@ -7,7 +7,7 @@
 6 silly lifecycle cameraApp@0.0.0~prestart: no script for prestart, continuing
 7 info lifecycle cameraApp@0.0.0~start: cameraApp@0.0.0
 8 verbose lifecycle cameraApp@0.0.0~start: unsafe-perm in lifecycle true
-9 verbose lifecycle cameraApp@0.0.0~start: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/tomasbarina/Desktop/CameraApp/cameraApp/node_modules/.bin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/Library/Frameworks/Python.framework/Versions/2.7/bin
+9 verbose lifecycle cameraApp@0.0.0~start: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/tomasbarina/Desktop/CameraApp/cameraApp/node_modules/.bin:/Library/Frameworks/Python.framework/Versions/2.7/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin
 10 verbose lifecycle cameraApp@0.0.0~start: CWD: /Users/tomasbarina/Desktop/CameraApp/cameraApp
 11 silly lifecycle cameraApp@0.0.0~start: Args: [ '-c', 'node ./bin/www' ]
 12 silly lifecycle cameraApp@0.0.0~start: Returned: code: 1  signal: null
