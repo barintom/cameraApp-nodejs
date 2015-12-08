@@ -41,14 +41,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 //app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-//app.use('/', routes);
-//app.use('/capture', capture);
-
-io.on('newItem', function (data) {
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-});
-
 app.get('/capture', function (req, res) {
     res.sendFile(path.join(__dirname + '/capture.html'));
 });
