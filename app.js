@@ -6,6 +6,8 @@ var multiparty = require('multiparty');
 var fs = require('fs');
 var socketio = require("socket.io");
 var app = express();
+var util = require('util');
+var URL = require('url');
 var contacts = require('contacts'); /// --> Our custom module
 
 
@@ -19,13 +21,16 @@ io.on('connection', function (socket) {
 /// --------- MONGODB / Mongoose ---------
 var url = 'mongodb://via:via@ds047114.mongolab.com:47114/via';
 var mongoose = require('mongoose');
-mongoose.connect(url);
-var Contact = mongoose.model('Contact', new mongoose.Schema({ name: String, age: Number, gender: String }));
+var connection = mongoose.connect(url).conn;
+var Contact = mongoose.model('Contact', new mongoose.Schema({ name: String, age: Number, gender: String, photo:  mongoose.Schema.ObjectId }));
 
 app.use(logger('dev'));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 /// ---- Display HTML page for image capturing ------
 app.get('/capture', function (req, res) {
@@ -46,8 +51,6 @@ app.delete('/contact/:id', function (req, res) {
         res.end();
          io.sockets.emit('change', { message: id + ' was deleted.' });
     });
-    
-    //res.sendFile(path.join(__dirname + '/capture.html'));
 });
 
 /// ------------ Show list of contacts UI ---------------
@@ -62,26 +65,64 @@ app.get('/contacts', function (req, res) {
     })
 });
 
-
-/// ---------- Store contanct to MongoDB--------------
-app.post('/contact', function (req, res) {
-    console.log('client request body', req.body)
-    var contact = new Contact(req.body);
-    contact.save(function saveContact(err) {
-        if (err) {
-            console.log(err);
-            res.status = 500 //Probably internal error
-            res.write(JSON.stringify({ status: 'ERROR', message: err }));
+/// ---------- Get Photo from MongoDB--------------
+app.get('/photo/:id', function (req, res) {
+    var id = req.params.id;
+    contacts.getImage(mongoose,id,function img(err, data) {
+            if (data) {
+            res.writeHead(200, {'Content-Type': 'image/x-png' });
+            
+            data.on('data', function(chunk) {
+            res.write(chunk,'binary');
+            })
+            data.on('end', function() {
+                res.end();
+            })
         } else {
-            console.log(contact);
-            res.status = 201 //Created
-            res.write(JSON.stringify({ status: 'DONE' }));
-            io.sockets.emit('change', { message: contact.name + ' was added to collection.' });
+            res.end();
         }
-        res.end();
+        
+    });
+});
+/// ---------- Store contact to MongoDB--------------
+app.post('/contact',bodyParser.raw(), function (req, res) {
+    var form = new multiparty.Form();
+
+    form.parse(req, function (err, fields, files) {
+        if (!fields.file || fields.file.length == 0) {
+            res.status = 400 //Probably missing data
+            res.send(JSON.stringify({ status: 'ERROR', message: 'Missing file' }));
+            return;
+        }
+        var data = fields.file[0].replace(/^data:image\/png;base64,/, ""); //Get image
+        var params =  URL.parse('?'+fields.data[0],true); //Reconstruct JSON
+        console.log(params);
+        var binaryData = new Buffer(data, 'base64');
+        contacts.storeImage(mongoose, binaryData,'photo.png','image/x-png', function stored(id) { 
+            var contact = new Contact(params.query);
+            contact.photo = id;
+            contact.save(function saveContact(err) {
+            if (err) {
+                console.log(err);
+                res.status = 500 //Probably internal error
+                res.write(JSON.stringify({ status: 'ERROR', message: err }));
+            } else {
+                console.log(contact);
+                res.status = 201 //Created
+                res.write(JSON.stringify({ status: 'DONE' }));
+                io.sockets.emit('change', { message: contact.name + ' was added to collection.' });
+            }
+            res.end();
+            });
+        });
     });
 });
 
+/*
+    contacts.storeImage(mongoose, binaryData,'img.png','image/x-png', function stored(id) {
+            console.log('stored with id',id);
+        });
+        */
 /// ---------- Recognize image content --------------
 app.post('/recognize', function (req, res) {
     //FIXME: Avoid fixed url in code
@@ -91,13 +132,14 @@ app.post('/recognize', function (req, res) {
     var form = new multiparty.Form();
     form.parse(req, function (err, fields, files) {
         var data = fields.imageFile[0].replace(/^data:image\/png;base64,/, "");
-        var binaryData = new Buffer(data, 'base64').toString('binary');
-        //FIXME: Skip persistance
+        var binaryData = new Buffer(data, 'base64');
+        //FIXME: Skip persistance   
         fs.writeFile(__dirname + '/img.png', binaryData, 'binary', function (err) {
-            var rs = fs.createReadStream(__dirname + '/img.png');
-            contacts.recognizeImage('api.skybiometry.com', url, rs, function attributes(att) {
-                res.send(JSON.stringify(att));
-            });
+            contacts.recognizeImage('api.skybiometry.com', url,  fs.createReadStream(__dirname + '/img.png'), function attributes(att) {
+            res.send(JSON.stringify(att));
+            //FIXME: This of course have nothing to do here.
+            fs.unlink(__dirname + '/img.png');
+        });
         });
     });
 });

@@ -17,8 +17,7 @@
 		  });
 		  socket.emit('newItem')
 
-		function loadData() {
-			  
+		function loadData() {			  
 			$.ajax({
 				 url: "/contacts",
                  type: "GET",                      
@@ -28,7 +27,7 @@
 								  
 			    var row = '<tr>'+
 				  				'<td>'+item._id+'</td>'+
-								'<td><img src=\''+item._id+'\'/></td>'+
+								'<td><img src=\'/photo/'+item.photo+'\' width=200/></td>'+
 								'<td>'+item.name+'</td><td>'+item.age+'</td><td>'+item.gender+'</td>'+
 								'<td><a href="#" onClick="deleteContact(\''+item._id+'\')">(X)</a></td>'+
 							'</tr>';
