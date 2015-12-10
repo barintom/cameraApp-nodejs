@@ -1,39 +1,33 @@
 <html>
-
 <head>
 	<title>Capture doc</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
-	<!--<script src="/socket.io/socket.io.js"></script> -->
 	<script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
 	<script lang="javascript/text">
 		var socket = io();
-		  socket.on('change', function(data) {
-			  //Reaload
-			  console.log('Change: ',data);
-			  loadData();
-		  });
-		  socket.emit('newItem')
+		socket.on('change', function(data) {
+			//Reaload
+			console.log('Change: ',data);
+			loadData();
+		});
+		socket.emit('newItem')
 
 		function loadData() {			  
 			$.ajax({
 				 url: "/contacts",
                  type: "GET",                      
                  success: function(data){
-					 $('#tbl > tbody:last').children().remove();
-                  	$.each(data, function(i,item){
-								  
-			    var row = '<tr>'+
-				  				'<td>'+item._id+'</td>'+
-								'<td><img src=\'/photo/'+item.photo+'\' width=200/></td>'+
-								'<td>'+item.name+'</td><td>'+item.age+'</td><td>'+item.gender+'</td>'+
-								'<td><a href="#" onClick="deleteContact(\''+item._id+'\')">(X)</a></td>'+
-							'</tr>';
-														
-                $('#tbl > tbody:last').append(row);
-
+					$('#tbl > tbody:last').children().remove();
+                  	$.each(data, function(i,item){			  
+						var row = '<tr>'+
+							'<td><img src=\'/photo/'+item.photo+'\' width=200/></td>'+
+							'<td>'+item.name+'</td><td>'+item.age+'</td><td>'+item.gender+'</td>'+
+							'<td><a href="#" onClick="deleteContact(\''+item._id+'\')">(X)</a></td>'+
+									'</tr>';	
+						$('#tbl > tbody:last').append(row);
         			});
                   },
 				  complete: function() {
@@ -54,17 +48,15 @@
 		});
 	</script>
 </head>
-
 <body>
 	<div class="container-fluid" style="min-width:400px">
 		<h3>Person list</h3>
 		<div class="jumbotron">
-
 			<div class="table-responsive">
 				<table class="table" id="tbl" name="tbl">
 					<thead>
 						<tr>
-							<th>#</th>
+							<!--<th>#</th>-->
 							<th>Photo</th>
 							<th>Name</th>
 							<th>Age</th>
@@ -79,8 +71,5 @@
 
 		</div>
 	</div>
-
-
 </body>
-
 </html>

@@ -1,27 +1,48 @@
 <html>
 
 <head>
-	<title>Capture documen</title>
+	<title>Capture document</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
 	<link rel="stylesheet" href="http://css-spinners.com/css/spinner/three-quarters.css" type="text/css">
 	<script lang="javascript/text">
 	// -------- SUBMIT CONTENT TO NODE.JS -> MONGO DB
+		//QueryString to Json
+		queryToJSON = function(queryString) {
+		var j, q;
+		q = queryString.split("&");
+		j = {};
+		$.each(q, function(i, arr) {
+			arr = arr.split('=');
+			return j[arr[0]] = arr[1];
+		});
+		return j;
+		}
+		
 	 $(document).ready(function(){       		  
      	$("#capture").submit(function(e){
 			$("#bar").show(); 
-			var fd = new FormData();
-			fd.append('file',canvas.toDataURL("image/png"));
-			fd.append('data',$(this).serialize());
+			var fd = {
+				meta: queryToJSON($(this).serialize()),
+				photo: {
+					contentType: 'image/png',
+					binary: canvas.toDataURL("image/png")
+				}
+			};
 			$.ajax({
             	url: "/contact",
                 type: "POST",
-                data: fd, 
-				contentType: false,
-				processData: false,
-				success: function() {},
+                data: JSON.stringify(fd),
+				contentType: 'application/json',
+				processData: false, 
+				success: function() {
+					bootbox.alert("Contact stored.", function() {
+					  location.reload();
+					});
+				},
 				complete: function() {
 					$("#bar").hide();
 				}
@@ -33,62 +54,61 @@
 		// -------- PREPARE IMAGE AND SUBMIT FOR RECOGNITION
 		$("#snap").click(function() {
 			$("#bar").show();
-			
-        context.drawImage(video, 0, 0, 320, 240);
-            
-        var myform = new FormData();
-        myform.append("imageFile", canvas.toDataURL("image/png"));
-        //FIXME: use jquery
-        var req = new XMLHttpRequest();
-        req.open("POST", "/recognize");
-        req.onreadystatechange = function() {
-        if (req.readyState == 4) {
-					var out = JSON.parse(req.response);
+       		context.drawImage(video, 0, 0, 320, 240);
+			var fd = {
+				binary: canvas.toDataURL("image/png")
+			}
+			video.pause();
+			$.ajax({
+            	url: "/recognize",
+                type: "POST",
+                data: JSON.stringify(fd),
+				contentType: 'application/json',
+				processData: false, 
+				success: function(res) {
+					var out = JSON.parse(res);
 					 console.log(out);
 					$('#age').val(out.age);
 					$('input[name=gender][value=' + out.gender + ']').prop('checked', true);
-                } else {
-                   console.log("error")
-                }
-				$("#bar").hide();
-				
-            };
-            
-            req.send(myform);
-			video.pause();
-	
+				},
+				complete: function() {
+					$("#bar").hide();
+				}
+            });
 		});
       
-		var canvas = document.getElementById("canvas"),
+		var canvas = $("#canvas")[0],
 			context = canvas.getContext("2d"),
-			video = document.getElementById("video"),
+			video = $("#video")[0],
 			videoObj = { "video": true },
 			errBack = function(error) {
 				console.log("Video capture error: ", error.code); 
 			};
-		
-		if(navigator.getUserMedia) { 
-			navigator.getUserMedia(videoObj, function(stream) {
-				video.src = stream;
-				video.play();
-			}, errBack);
-		} else if(navigator.webkitGetUserMedia) { 
-			navigator.webkitGetUserMedia(videoObj, function(stream){
-				video.src = window.webkitURL.createObjectURL(stream);
-				video.play();
-			}, errBack);
-		}
-		else if(navigator.mozGetUserMedia) { 
-			navigator.mozGetUserMedia(videoObj, function(stream){
-				video.src = window.URL.createObjectURL(stream);
-				video.play();
-			}, errBack);
-		}
+
+		navigator.getUserMedia = (navigator.getUserMedia || 
+                          navigator.webkitGetUserMedia || 
+                          navigator.mozGetUserMedia || 
+                          navigator.msGetUserMedia);
+	   if (navigator.getUserMedia) {
+    	  navigator.getUserMedia({ video:true,audio:false}, function(stream) { 
+			  video.src = window.URL.createObjectURL(stream);
+			  video.play(); 
+		},
+         function(error) { alert(error); }
+      );
+   }
+   else {
+      alert('Sorry, the browser you are using doesn\'t support getUserMedia');
+      return;
+    }
+ 
 	  });
+	  
 	</script>
 </head>
 
 <body>
+
 	<div class="container-fluid" style="min-width:400px">
 		<h3>Add new person</h3>
 		<div class="jumbotron">
